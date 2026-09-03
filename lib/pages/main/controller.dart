@@ -421,10 +421,9 @@ class MainController extends GetxController
 
   @override
   void onClose() {
-    ScrollToTopRegistry
-      ..unregister('main.home')
-      ..unregister('main.dynamics')
-      ..unregister('main.mine');
+    ScrollToTopRegistry.unregister('main.home');
+    ScrollToTopRegistry.unregister('main.dynamics');
+    ScrollToTopRegistry.unregister('main.mine');
     barOffset?.close();
     controller.dispose();
     super.onClose();
