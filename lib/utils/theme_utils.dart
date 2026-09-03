@@ -1,6 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
-import 'package:PiliPlus/utils/font_utils.dart';
 import 'package:PiliPlus/utils/liquid_glass.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoThemeData;
@@ -33,8 +32,19 @@ abstract final class ThemeUtils {
     required bool isDynamic,
     bool isDark = false,
   }) {
-    final fontWeight = Pref.appFontWeight;
-    final fontFamily = FontUtils.fontFamily;
+    final fontWeight = switch (Pref.appFontWeight) {
+      100 => FontWeight.w100,
+      200 => FontWeight.w200,
+      300 => FontWeight.w300,
+      400 => FontWeight.w400,
+      500 => FontWeight.w500,
+      600 => FontWeight.w600,
+      700 => FontWeight.w700,
+      800 => FontWeight.w800,
+      900 => FontWeight.w900,
+      _ => FontWeight.normal,
+    };
+    const fontFamily = null;
 
     TextTheme? textTheme;
     if (fontWeight != .normal) {
