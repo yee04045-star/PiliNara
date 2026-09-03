@@ -18,7 +18,7 @@ jobs:
     runs-on: macos-26
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -66,7 +66,7 @@ jobs:
           zip -qry "PiliPlus_ios_${{ github.run_number }}_${{ inputs.build_name }}.ipa" Payload
 
       - name: Upload unsigned IPA
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: PiliPlus-iOS-26-liquid-glass
           path: PiliPlus_ios_*.ipa
