@@ -8,11 +8,11 @@ class GlassSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
         child: Container(
-          decoration: BoxDecoration(color: Colors.white.withValues(alpha: .16)),
+          color: Colors.white.withValues(alpha: .18),
           child: child,
         ),
       ),
