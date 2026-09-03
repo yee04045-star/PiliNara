@@ -1,0 +1,73 @@
+name: Build iOS 26 Liquid Glass variant
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_name:
+        description: 'Optional build name suffix'
+        required: false
+        default: 'liquid-glass'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: pubspec.yaml
+          cache: true
+
+      - name: Generate release defines and version
+        shell: pwsh
+        run: lib/scripts/build.ps1
+
+      - name: Apply PiliPlus Flutter framework patches
+        shell: pwsh
+        run: lib/scripts/patch.ps1 iOS
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Install iOS pods
+        working-directory: ios
+        run: pod install --repo-update
+
+      - name: Generate Flutter iOS configuration
+        run: >-
+          flutter build ios --release --config-only --no-codesign --no-pub
+          --dart-define-from-file=pili_release.json
+
+      - name: Build unsigned iOS app with Xcode
+        working-directory: .
+        run: >-
+          xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner
+          -configuration Release -sdk iphoneos -derivedDataPath build/ios
+          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+          CODE_SIGN_IDENTITY= DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build
+
+      - name: Create unsigned IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p Payload
+          rm -rf Payload/Runner.app
+          cp -R build/ios/Build/Products/Release-iphoneos/Runner.app Payload/Runner.app
+          find Payload/Runner.app/Frameworks -type d -name '*.framework' -exec codesign --force --sign - --preserve-metadata=identifier,entitlements {} \;
+          zip -qry "PiliPlus_ios_${{ github.run_number }}_${{ inputs.build_name }}.ipa" Payload
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: PiliPlus-iOS-26-liquid-glass
+          path: PiliPlus_ios_*.ipa
+          if-no-files-found: error
