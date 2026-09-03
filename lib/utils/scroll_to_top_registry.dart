@@ -26,7 +26,7 @@ class ScrollToTopRegistry {
     registerCallback(
       key,
       () {
-        if (!controller.hasClients) return;
+        if (!controller.hasClients) return Future<void>.value();
         return controller.animateTo(
           0,
           duration: const Duration(milliseconds: 1000),
