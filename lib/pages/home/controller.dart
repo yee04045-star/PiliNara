@@ -8,6 +8,7 @@ import 'package:PiliPlus/pages/common/common_controller.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/scroll_to_top_registry.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/wbi_sign.dart';
@@ -85,7 +86,16 @@ class HomeController extends GetxController
   }
 
   @override
+  void onReady() {
+    super.onReady();
+    if (scrollController.hasClients) {
+      ScrollToTopRegistry.register('home_feed', scrollController);
+    }
+  }
+
+  @override
   void dispose() {
+    ScrollToTopRegistry.unregister('home_feed');
     tabController.dispose();
     super.dispose();
   }
