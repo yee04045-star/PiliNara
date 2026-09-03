@@ -11,15 +11,14 @@ class ScrollToTopRegistry {
     _controllers.remove(id);
   }
 
-  static void scrollAllToTop() {
+  static Future<void> scrollAllToTop() async {
     for (final controller in _controllers.values) {
-      if (controller.hasClients) {
-        controller.animateTo(
-          0,
-          duration: const Duration(milliseconds: 380),
-          curve: Curves.easeOutCubic,
-        );
-      }
+      if (!controller.hasClients) continue;
+      await controller.animateTo(
+        0,
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeOutCubic,
+      );
     }
   }
 }
