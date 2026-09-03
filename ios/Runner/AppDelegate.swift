@@ -1,6 +1,16 @@
 import Flutter
 import UIKit
 
+final class PiliStatusBarTapWindow: UIWindow {
+  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    if let touch = touches.first {
+      let p = touch.location(in: self)
+      if p.y < 80 { NotificationCenter.default.post(name: NSNotification.Name("PiliStatusBarTap"), object: nil) }
+    }
+    super.touchesEnded(touches, with: event)
+  }
+}
+
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
@@ -8,6 +18,11 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     application.applicationSupportsShakeToEdit = false // Disable shake to undo
+
+    NotificationCenter.default.addObserver(forName: NSNotification.Name("PiliStatusBarTap"), object: nil, queue: .main) { _ in
+      let channel = FlutterMethodChannel(name: "piliplus/statusbar", binaryMessenger: self.registrar(forPlugin: "statusbar")?.messenger() ?? FlutterBinaryMessenger())
+      channel.invokeMethod("scrollToTop", arguments: nil)
+    }
 
     if #available(iOS 26.0, *) {
       // Keep native UIKit surfaces on the system-managed Liquid Glass path.
@@ -152,15 +167,5 @@ final class PiliNativeGlassNavigationView: NSObject, FlutterPlatformView, UITabB
 
   func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
     channel.invokeMethod("selected", arguments: item.tag)
-  }
-}
-
-final class StatusBarTapWindow: UIWindow {
-  override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-    let view = super.hitTest(point, with: event)
-    if point.y < safeAreaInsets.top + 8 {
-      NotificationCenter.default.post(name: NSNotification.Name("PiliStatusBarTap"), object: nil)
-    }
-    return view
   }
 }
