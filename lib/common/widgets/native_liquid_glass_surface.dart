@@ -2,12 +2,12 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-/// Places a real iOS 26 SwiftUI Liquid Glass surface behind Flutter content.
+/// A small iOS 26 native Liquid Glass layer.
 ///
-/// On iOS 26 the native platform view uses SwiftUI's `glassEffect`, while
-/// other platforms simply return the child unchanged.
+/// The native platform view is deliberately placed BELOW the Flutter child.
+/// This avoids a full-size UiKitView covering the Flutter compositor and
+/// leaving the app on a gray/blank frame after the launch screen.
 class NativeLiquidGlassSurface extends StatelessWidget {
   const NativeLiquidGlassSurface({
     required this.child,
@@ -29,19 +29,17 @@ class NativeLiquidGlassSurface extends StatelessWidget {
     return Stack(
       fit: StackFit.passthrough,
       children: [
-        child,
         Positioned.fill(
-          child: IgnorePointer(
-            child: UiKitView(
-              viewType: 'piliplus/native_liquid_glass_surface',
-              creationParams: {
-                'radius': radius,
-                'interactive': interactive,
-              },
-              creationParamsCodec: const StandardMessageCodec(),
-            ),
+          child: UiKitView(
+            viewType: 'piliplus/native_liquid_glass_surface',
+            creationParams: {
+              'radius': radius,
+              'interactive': interactive,
+            },
+            creationParamsCodec: const StandardMessageCodec(),
           ),
         ),
+        child,
       ],
     );
   }
