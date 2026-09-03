@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'dart:ui' show ImageFilter;
 
+import 'package:PiliPlus/common/widgets/native_liquid_glass_surface.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Runtime helpers for the iOS 26 Liquid Glass visual treatment.
@@ -59,11 +60,11 @@ class LiquidGlassPanel extends StatelessWidget {
         ? LiquidGlass.border(scheme, isDark: isDark)
         : Colors.transparent;
 
-    Widget surface = ClipRRect(
+    final flutterGlassChild = ClipRRect(
       borderRadius: borderRadius,
       clipBehavior: clipBehavior,
       child: BackdropFilter(
-        filter: enabled ? LiquidGlass.blur : ImageFilter.blur(),
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: fill,
@@ -74,6 +75,20 @@ class LiquidGlassPanel extends StatelessWidget {
         ),
       ),
     );
+
+    final nativeGlassChild = ClipRRect(
+      borderRadius: borderRadius,
+      clipBehavior: clipBehavior,
+      child: Padding(padding: padding ?? EdgeInsets.zero, child: child),
+    );
+
+    Widget surface = enabled
+        ? NativeLiquidGlassSurface(
+            radius: borderRadius.topLeft.x,
+            interactive: true,
+            child: nativeGlassChild,
+          )
+        : flutterGlassChild;
     if (margin != null) surface = Padding(padding: margin!, child: surface);
     return surface;
   }
