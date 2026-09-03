@@ -1,5 +1,7 @@
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
+import 'package:PiliPlus/utils/font_utils.dart';
+import 'package:PiliPlus/utils/liquid_glass.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoThemeData;
 import 'package:flutter/foundation.dart' show PlatformDispatcher;
@@ -31,46 +33,48 @@ abstract final class ThemeUtils {
     required bool isDynamic,
     bool isDark = false,
   }) {
-    final appFontWeight = Pref.appFontWeight.clamp(
-      -1,
-      FontWeight.values.length - 1,
-    );
-    final fontWeight = appFontWeight == -1
-        ? null
-        : FontWeight.values[appFontWeight];
-    final fontFamily = Pref.appFont;
-    final noCustomText = fontFamily == null && fontWeight == null;
-    late final textStyle = TextStyle(fontWeight: fontWeight);
-    ThemeData theme = ThemeData(
+    final fontWeight = Pref.appFontWeight;
+    final fontFamily = FontUtils.fontFamily;
+
+    TextTheme? textTheme;
+    if (fontWeight != .normal) {
+      final textStyle = TextStyle(fontWeight: fontWeight);
+      textTheme = TextTheme(
+        displayLarge: textStyle,
+        displayMedium: textStyle,
+        displaySmall: textStyle,
+        headlineLarge: textStyle,
+        headlineMedium: textStyle,
+        headlineSmall: textStyle,
+        titleLarge: textStyle,
+        titleMedium: textStyle,
+        titleSmall: textStyle,
+        bodyLarge: textStyle,
+        bodyMedium: textStyle,
+        bodySmall: textStyle,
+        labelLarge: textStyle,
+        labelMedium: textStyle,
+        labelSmall: textStyle,
+      );
+    }
+
+    final useLiquidGlass = LiquidGlass.isIOS26OrNewer;
+    final glassSurface = useLiquidGlass
+        ? LiquidGlass.fill(colorScheme, isDark: isDark)
+        : colorScheme.surface;
+
+    final theme = ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       fontFamily: fontFamily,
-      textTheme: noCustomText
-          ? null
-          : TextTheme(
-              displayLarge: textStyle,
-              displayMedium: textStyle,
-              displaySmall: textStyle,
-              headlineLarge: textStyle,
-              headlineMedium: textStyle,
-              headlineSmall: textStyle,
-              titleLarge: textStyle,
-              titleMedium: textStyle,
-              titleSmall: textStyle,
-              bodyLarge: textStyle,
-              bodyMedium: textStyle,
-              bodySmall: textStyle,
-              labelLarge: textStyle,
-              labelMedium: textStyle,
-              labelSmall: textStyle,
-            ),
-      tabBarTheme: noCustomText ? null : TabBarThemeData(labelStyle: textStyle),
+      textTheme: textTheme,
       appBarTheme: AppBarTheme(
         elevation: 0,
         titleSpacing: 0,
         centerTitle: false,
         scrolledUnderElevation: 0,
-        backgroundColor: colorScheme.surface,
+        backgroundColor: glassSurface,
+        surfaceTintColor: useLiquidGlass ? Colors.transparent : null,
         titleTextStyle: TextStyle(
           fontSize: 16,
           fontWeight: fontWeight,
@@ -79,7 +83,11 @@ abstract final class ThemeUtils {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        surfaceTintColor: isDark ? colorScheme.surfaceContainerHighest : null,
+        backgroundColor: useLiquidGlass ? glassSurface : null,
+        surfaceTintColor: useLiquidGlass
+            ? Colors.transparent
+            : (isDark ? colorScheme.surfaceContainerHighest : null),
+        elevation: useLiquidGlass ? 0 : null,
       ),
       snackBarTheme: SnackBarThemeData(
         elevation: 20,
@@ -93,29 +101,7 @@ abstract final class ThemeUtils {
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: colorScheme.surfaceContainerLow,
-        elevation: 3,
-        shadowColor: colorScheme.shadow,
-        surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        menuPadding: const EdgeInsets.symmetric(vertical: 4),
-        labelTextStyle: WidgetStatePropertyAll(
-          TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 14,
-            letterSpacing: 0.1,
-            fontWeight: FontWeight.w500,
-            fontFamily: fontFamily,
-          ),
-        ),
-      ),
-      listTileTheme: const ListTileThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-        ),
-        controlAffinity: .leading,
+        surfaceTintColor: isDark ? colorScheme.surfaceContainerHighest : null,
       ),
       cardTheme: CardThemeData(
         elevation: 1,
@@ -138,11 +124,13 @@ abstract final class ThemeUtils {
           fontFamily: fontFamily,
           color: colorScheme.onSurface,
         ),
-        backgroundColor: colorScheme.surface,
+        backgroundColor: glassSurface,
+        surfaceTintColor: useLiquidGlass ? Colors.transparent : null,
         constraints: const BoxConstraints(minWidth: 280, maxWidth: 420),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: glassSurface,
+        surfaceTintColor: useLiquidGlass ? Colors.transparent : null,
         shape: const RoundedRectangleBorder(
           borderRadius: Style.bottomSheetRadius,
         ),
@@ -178,16 +166,15 @@ abstract final class ThemeUtils {
         shape: Border(),
         collapsedShape: Border(),
       ),
+      listTileTheme: const ListTileThemeData(controlAffinity: .leading),
       filledButtonTheme: const FilledButtonThemeData(
         style: ButtonStyle(
           shadowColor: WidgetStatePropertyAll(Colors.transparent),
         ),
       ),
-      pageTransitionsTheme: PageTransitionsTheme(
+      pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: Pref.enablePredictiveBack
-              ? const PredictiveBackPageTransitionsBuilder()
-              : const ZoomPageTransitionsBuilder(),
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
         },
       ),
     );
