@@ -17,6 +17,7 @@ import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/utils/scroll_to_top_registry.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -113,6 +114,8 @@ class MainController extends GetxController
     }
 
     hasHome = navigationBars.contains(NavigationBarType.home);
+    _registerScrollToTopHandlers();
+    _activateCurrentScrollTarget();
     if (msgBadgeMode != DynamicBadgeMode.hidden) {
       if (hasHome) {
         lastCheckUnreadAt = DateTime.now().millisecondsSinceEpoch;
@@ -287,10 +290,47 @@ class MainController extends GetxController
     }
   }
 
+  String _scrollToTopKey(NavigationBarType type) => switch (type) {
+    NavigationBarType.home => 'main.home',
+    NavigationBarType.dynamics => 'main.dynamics',
+    NavigationBarType.mine => 'main.mine',
+  };
+
+  void _registerScrollToTopHandlers() {
+    if (hasHome) {
+      ScrollToTopRegistry.registerCallback(
+        'main.home',
+        homeController.animateToTop,
+      );
+    }
+    if (hasDyn) {
+      ScrollToTopRegistry.registerCallback(
+        'main.dynamics',
+        dynamicController.animateToTop,
+      );
+    }
+    if (navigationBars.contains(NavigationBarType.mine)) {
+      ScrollToTopRegistry.registerCallback(
+        'main.mine',
+        () => Get.putOrFind(MineController.new).animateToTop(),
+      );
+    }
+  }
+
+  void _activateCurrentScrollTarget() {
+    if (navigationBars.isEmpty) return;
+    _activateCurrentScrollTargetFor(navigationBars[selectedIndex.value]);
+  }
+
+  void _activateCurrentScrollTargetFor(NavigationBarType type) {
+    ScrollToTopRegistry.setActive(_scrollToTopKey(type));
+  }
+
   void setIndex(int value) {
     feedBack();
 
     final currentNav = navigationBars[value];
+    _activateCurrentScrollTargetFor(currentNav);
     if (value != selectedIndex.value) {
       selectedIndex.value = value;
       if (mainTabBarView) {
@@ -381,6 +421,10 @@ class MainController extends GetxController
 
   @override
   void onClose() {
+    ScrollToTopRegistry
+      ..unregister('main.home')
+      ..unregister('main.dynamics')
+      ..unregister('main.mine');
     barOffset?.close();
     controller.dispose();
     super.onClose();
