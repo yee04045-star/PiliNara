@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'package:PiliPlus/common/widgets/native_liquid_glass_surface.dart';
 import 'package:flutter/material.dart';
 
 /// iOS 26 style glass container for top bars, search bars and floating controls.
@@ -9,21 +9,9 @@ class LiquidGlassSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: (dark ? Colors.black : Colors.white).withValues(alpha: .28),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: .18),
-            ),
-          ),
-          child: child,
-        ),
-      ),
+    return NativeLiquidGlassSurface(
+      radius: radius,
+      child: child,
     );
   }
 }
