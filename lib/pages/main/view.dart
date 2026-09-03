@@ -7,6 +7,7 @@ import 'package:PiliPlus/common/widgets/floating_navigation_bar.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/main_layout.dart';
+import 'package:PiliPlus/common/widgets/native_liquid_glass_navigation.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/pages/home/view.dart';
@@ -18,11 +19,11 @@ import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
+import 'package:PiliPlus/utils/liquid_glass.dart';
 import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
-import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -89,12 +90,7 @@ class _MainAppState extends PopScopeState<MainApp>
       }
     }
     if (!_mainController.useSideBar) {
-      final size = MediaQuery.sizeOf(context);
-      if (Pref.autoSideBar) {
-        _mainController.useBottomNav = size.width < Pref.sideBarThreshold;
-      } else {
-        _mainController.useBottomNav = size.isPortrait;
-      }
+      _mainController.useBottomNav = MediaQuery.sizeOf(context).isPortrait;
     }
   }
 
@@ -329,7 +325,26 @@ class _MainAppState extends PopScopeState<MainApp>
   Widget? get _bottomNav {
     Widget? bottomNav;
     if (_mainController.navigationBars.length > 1) {
-      if (_mainController.floatingNavBar) {
+      if (LiquidGlass.isIOS26OrNewer) {
+        bottomNav = Obx(
+          () => NativeLiquidGlassNavigation(
+            labels: _mainController.navigationBars
+                .map((e) => e.label)
+                .toList(growable: false),
+            symbols: _mainController.navigationBars
+                .map(
+                  (e) => switch (e) {
+                    NavigationBarType.home => 'house',
+                    NavigationBarType.dynamics => 'bolt.horizontal',
+                    NavigationBarType.mine => 'person',
+                  },
+                )
+                .toList(growable: false),
+            selectedIndex: _mainController.selectedIndex.value,
+            onSelected: _mainController.setIndex,
+          ),
+        );
+      } else if (_mainController.floatingNavBar) {
         bottomNav = Obx(
           () => FloatingNavigationBar(
             onDestinationSelected: _mainController.setIndex,
