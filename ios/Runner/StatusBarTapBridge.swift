@@ -1,15 +1,15 @@
 import UIKit
 import Flutter
 
-final class PiliStatusBarTapWindow: UIWindow {
-  override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-    let view = super.hitTest(point, with: event)
-    if point.y <= safeAreaInsets.top + 20 {
-      NotificationCenter.default.post(
-        name: Notification.Name("PiliStatusBarTap"),
-        object: nil
-      )
+final class StatusBarTapBridgeWindow: UIWindow {
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        if point.y <= 60 {
+            NotificationCenter.default.post(name: .piliStatusBarTap, object: nil)
+        }
+        return super.point(inside: point, with: event)
     }
-    return view
-  }
+}
+
+extension Notification.Name {
+    static let piliStatusBarTap = Notification.Name("piliStatusBarTap")
 }
