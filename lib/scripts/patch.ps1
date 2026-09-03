@@ -27,11 +27,6 @@ $TextSelectionPatch = "lib/scripts/text_selection.patch"
 # https://github.com/bggRGjQaUbCoE/PiliPlus/issues/1947
 $NavigatorPatch = "lib/scripts/navigator.patch"
 
-# fix predictive back direction after popping a nested route
-# (route below mounts the transition with a null back event during another
-#  route's gesture; direction tween is never recomputed on later gestures)
-$PredictiveBackPatch = "lib/scripts/predictive_back_page_transitions_builder.patch"
-
 # https://github.com/bggRGjQaUbCoE/PiliPlus/issues/2107
 $ImageAnimPatch = "lib/scripts/image_anim.patch"
 
@@ -138,7 +133,6 @@ switch ($platform.ToLower()) {
         $patches += $BottomSheetAndroidPatch
         $patches += $ScrollViewPatch
         $patches += $NavigatorPatch
-        $patches += $PredictiveBackPatch
 
         git reset --hard HEAD
     }
@@ -181,12 +175,20 @@ foreach ($revert in $reverts) {
     git stash pop
 }
 
+# Flutter framework patches are version-sensitive. The repository-specific
+# iOS patches above remain strict; framework patches are optional because newer
+# Flutter releases may already contain the same change.
 foreach ($patch in $patches) {
-    git apply "$env:GITHUB_WORKSPACE/$patch"
+    git apply --check "$env:GITHUB_WORKSPACE/$patch"
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "$patch applied"
+        git apply "$env:GITHUB_WORKSPACE/$patch"
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "$patch applied"
+        } else {
+            throw "$LASTEXITCODE"
+        }
     } else {
-        throw "$LASTEXITCODE"
+        Write-Warning "$patch did not apply; skipping this framework compatibility patch"
     }
 }
 
@@ -266,11 +268,16 @@ Get-ChildItem -Path "$env:GITHUB_WORKSPACE/lib/scripts/material" -Filter *.patch
 cd $MaterialUiDir.FullName
 
 foreach ($patch in $patches_material) {
-    git apply "$env:GITHUB_WORKSPACE/$patch"
+    git apply --check "$env:GITHUB_WORKSPACE/$patch"
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "$patch applied"
+        git apply "$env:GITHUB_WORKSPACE/$patch"
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "$patch applied"
+        } else {
+            throw "$LASTEXITCODE"
+        }
     } else {
-        throw "$LASTEXITCODE"
+        Write-Warning "$patch did not apply; skipping this material_ui compatibility patch"
     }
 }
 
@@ -311,10 +318,19 @@ Get-ChildItem -Path "$env:GITHUB_WORKSPACE/lib/scripts/cupertino" -Filter *.patc
 cd $CupertinoUiDir.FullName
 
 foreach ($patch in $patches_cupertino) {
-    git apply "$env:GITHUB_WORKSPACE/$patch"
+    git apply --check "$env:GITHUB_WORKSPACE/$patch"
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "$patch applied"
+        git apply "$env:GITHUB_WORKSPACE/$patch"
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "$patch applied"
+        } else {
+            throw "$LASTEXITCODE"
+        }
     } else {
-        throw "$LASTEXITCODE"
+        Write-Warning "$patch did not apply; skipping this cupertino_ui compatibility patch"
     }
 }
+
+# Optional patch checks can leave LASTEXITCODE=1 even after being skipped.
+# Explicitly succeed once all required and optional patch processing is done.
+exit 0
