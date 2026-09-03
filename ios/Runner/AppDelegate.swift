@@ -154,3 +154,13 @@ final class PiliNativeGlassNavigationView: NSObject, FlutterPlatformView, UITabB
     channel.invokeMethod("selected", arguments: item.tag)
   }
 }
+
+final class StatusBarTapWindow: UIWindow {
+  override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+    let view = super.hitTest(point, with: event)
+    if point.y < safeAreaInsets.top + 8 {
+      NotificationCenter.default.post(name: NSNotification.Name("PiliStatusBarTap"), object: nil)
+    }
+    return view
+  }
+}
