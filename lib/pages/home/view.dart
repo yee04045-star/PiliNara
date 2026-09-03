@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_height_widget.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/native_liquid_glass_surface.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/pages/common/common_page.dart';
 import 'package:PiliPlus/pages/home/controller.dart';
@@ -109,6 +110,18 @@ class _HomePageState extends CommonPageState<HomePage>
         userAvatar(colorScheme: _colorScheme, mainController: _mainController),
       ],
     );
+
+    Widget toolbar = Padding(
+      padding: padding,
+      child: NativeLiquidGlassSurface(
+        radius: 28,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: child,
+        ),
+      ),
+    );
+
     if (_homeController.hideTopBar) {
       if (_mainController.barOffset case final barOffset?) {
         return Obx(
@@ -117,10 +130,7 @@ class _HomePageState extends CommonPageState<HomePage>
             return CustomHeightWidget(
               offset: Offset(0, -offset),
               height: Style.topBarHeight - offset,
-              child: Padding(
-                padding: padding,
-                child: child,
-              ),
+              child: toolbar,
             );
           },
         );
@@ -135,17 +145,16 @@ class _HomePageState extends CommonPageState<HomePage>
               curve: Curves.easeInOutCubicEmphasized,
               duration: const Duration(milliseconds: 500),
               height: showSearchBar ? Style.topBarHeight : 0,
-              padding: padding,
-              child: child,
+              child: toolbar,
             ),
           );
         });
       }
     }
-    return Container(
+
+    return SizedBox(
       height: Style.topBarHeight,
-      padding: padding,
-      child: child,
+      child: toolbar,
     );
   }
 
@@ -155,8 +164,7 @@ class _HomePageState extends CommonPageState<HomePage>
       child: SizedBox(
         height: 44,
         child: Material(
-          borderRadius: borderRadius,
-          color: _colorScheme.onSecondaryContainer.withValues(alpha: 0.05),
+          color: Colors.transparent,
           child: InkWell(
             borderRadius: borderRadius,
             splashColor: _colorScheme.primaryContainer.withValues(
