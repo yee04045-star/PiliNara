@@ -8,15 +8,14 @@ class LiquidGlassHud extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: .35),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: .18),
-            ),
+            color: Colors.white.withValues(alpha: .14),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withValues(alpha: .22)),
           ),
           child: child,
         ),
