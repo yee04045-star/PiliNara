@@ -1,16 +1,6 @@
 import Flutter
 import UIKit
 
-final class PiliStatusBarTapWindow: UIWindow {
-  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-    if let touch = touches.first {
-      let p = touch.location(in: self)
-      if p.y < 80 { NotificationCenter.default.post(name: NSNotification.Name("PiliStatusBarTap"), object: nil) }
-    }
-    super.touchesEnded(touches, with: event)
-  }
-}
-
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
@@ -19,14 +9,9 @@ final class PiliStatusBarTapWindow: UIWindow {
   ) -> Bool {
     application.applicationSupportsShakeToEdit = false // Disable shake to undo
 
-    NotificationCenter.default.addObserver(forName: NSNotification.Name("PiliStatusBarTap"), object: nil, queue: .main) { _ in
-      let channel = FlutterMethodChannel(name: "piliplus/statusbar", binaryMessenger: self.registrar(forPlugin: "statusbar")?.messenger() ?? FlutterBinaryMessenger())
-      channel.invokeMethod("scrollToTop", arguments: nil)
-    }
-
     if #available(iOS 26.0, *) {
-      // Keep native UIKit surfaces on the system-managed Liquid Glass path.
-      // Flutter-rendered widgets use the shared LiquidGlass theme utility.
+      // Standard UIKit navigation surfaces automatically receive the system
+      // Liquid Glass treatment on iOS 26. Keep UIKit in charge of that styling.
       let navigationAppearance = UINavigationBarAppearance()
       navigationAppearance.configureWithDefaultBackground()
       UINavigationBar.appearance().standardAppearance = navigationAppearance
@@ -43,18 +28,23 @@ final class PiliStatusBarTapWindow: UIWindow {
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
     guard let registrar = engineBridge.pluginRegistry.registrar(
       forPlugin: "PiliNativeGlassNavigation"
     ) else {
       return
     }
+
     registrar.register(
       PiliNativeGlassNavigationFactory(messenger: registrar.messenger()),
       withId: "piliplus/liquid_glass_navigation"
     )
+    registrar.register(
+      PiliNativeLiquidGlassFactory(messenger: registrar.messenger()),
+      withId: "piliplus/native_liquid_glass_surface"
+    )
   }
 }
-
 
 final class PiliNativeGlassNavigationFactory: NSObject, FlutterPlatformViewFactory {
   private let messenger: FlutterBinaryMessenger
@@ -123,7 +113,7 @@ final class PiliNativeGlassNavigationView: NSObject, FlutterPlatformView, UITabB
       item.accessibilityIdentifier = "PiliPlus.tab.\(index)"
       return item
     }
-    if let item = tabBar.items?.dropFirst(selectedIndex).first {
+    if let item = tabBar.items?.first(where: { $0.tag == selectedIndex }) {
       tabBar.selectedItem = item
     }
 
