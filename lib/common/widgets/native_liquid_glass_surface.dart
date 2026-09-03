@@ -36,7 +36,7 @@ class NativeLiquidGlassSurface extends StatelessWidget {
               'radius': radius,
               'interactive': interactive,
             },
-            creationParamsCodec: const StandardMessageCodec(),
+            creationParamsCodec: StandardMessageCodec(),
           ),
         ),
         child,
