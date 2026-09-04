@@ -2,6 +2,7 @@ import SwiftUI
 import UIKit
 import Flutter
 
+@available(iOS 26.0, *)
 private struct NativeLiquidGlassContent: View {
     let radius: CGFloat
     let interactive: Bool
@@ -46,7 +47,7 @@ final class PiliNativeLiquidGlassFactory: NSObject, FlutterPlatformViewFactory {
 
 final class PiliNativeLiquidGlassView: NSObject, FlutterPlatformView {
     private let container: UIView
-    private var hostingController: UIHostingController<NativeLiquidGlassContent>?
+    private var hostingController: UIViewController?
 
     init(frame: CGRect, radius: CGFloat, interactive: Bool) {
         container = UIView(frame: frame)
