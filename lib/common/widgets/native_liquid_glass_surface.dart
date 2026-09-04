@@ -1,14 +1,19 @@
-import 'dart:io' show Platform;
+import 'dart:ui' show ImageFilter;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-/// A small iOS 26 native Liquid Glass layer.
+/// Safe Liquid Glass surface for Flutter content.
 ///
-/// The native platform view is deliberately placed BELOW the Flutter child.
-/// This avoids a full-size UiKitView covering the Flutter compositor and
-/// leaving the app on a gray/blank frame after the launch screen.
+/// IMPORTANT: A full-size UiKitView cannot be used as a wrapper around a
+/// Flutter subtree. Flutter's iOS platform-view composition can place the
+/// native view above the Flutter compositor even when the Dart widget is
+/// visually below it. That can cover the Flutter frame and produce a
+/// launch-screen -> gray/blank app with blocked input.
+///
+/// Until the native glass overlay is attached at the root UIKit level, keep
+/// this widget entirely in the Flutter compositor. This preserves scrolling,
+/// gestures and rendering. The native iOS 26 glass implementation remains
+/// available in NativeLiquidGlassView.swift for the later root-overlay path.
 class NativeLiquidGlassSurface extends StatelessWidget {
   const NativeLiquidGlassSurface({
     required this.child,
@@ -23,33 +28,23 @@ class NativeLiquidGlassSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (defaultTargetPlatform != TargetPlatform.iOS || !_isIOS26OrNewer) {
-      return child;
-    }
+    final dark = Theme.of(context).brightness == Brightness.dark;
 
-    return Stack(
-      fit: StackFit.passthrough,
-      children: [
-        Positioned.fill(
-          child: UiKitView(
-            viewType: 'piliplus/native_liquid_glass_surface',
-            creationParams: {
-              'radius': radius,
-              'interactive': interactive,
-            },
-            creationParamsCodec: StandardMessageCodec(),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: (dark ? Colors.black : Colors.white).withValues(alpha: 0.28),
+            border: Border.all(
+              color: (dark ? Colors.white : Colors.black).withValues(alpha: 0.12),
+            ),
+            borderRadius: BorderRadius.circular(radius),
           ),
+          child: child,
         ),
-        child,
-      ],
+      ),
     );
-  }
-
-  static bool get _isIOS26OrNewer {
-    if (!Platform.isIOS) return false;
-    final match = RegExp(r'(?:^|[^0-9])(\d+)(?:\.\d+)?')
-        .firstMatch(Platform.operatingSystemVersion);
-    final major = int.tryParse(match?.group(1) ?? '0') ?? 0;
-    return major >= 26;
   }
 }
